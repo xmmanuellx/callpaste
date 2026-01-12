@@ -64,6 +64,14 @@
             align-items: center !important;
             animation: none !important;
             transform: none !important;
+            background-color: transparent !important;
+            /* FIX: Unify visual background */
+        }
+
+        body.slim-mode .phone-line:hover,
+        body.slim-mode .text-line:hover {
+            background-color: rgba(128, 128, 128, 0.05) !important;
+            /* Subtle hover */
         }
 
         body.slim-mode .phone-line:last-child,
@@ -83,8 +91,8 @@
             border-left: none !important;
             color: var(--text-secondary);
             font-size: 0.875rem;
-            padding-left: 0.5rem !important;
-            /* Align with phone lines */
+            padding-left: 0.75rem !important;
+            /* FIX: Better visual alignment with phone lines */
             justify-content: flex-start;
         }
 
