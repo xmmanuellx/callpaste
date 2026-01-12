@@ -635,8 +635,8 @@ body {
     border-top: none;
     padding: 0 0.5rem;
     /* Padding lateral pequeño */
-    height: 34px;
-    /* Súper fino */
+    height: 38px;
+    /* Un pelín más alto que 34px para que quepan bien los botones de 24px + paddings */
 }
 
 .slim-mode .phone-content {
@@ -660,47 +660,12 @@ body {
 }
 
 .slim-mode .vote-buttons {
-    height: auto;
-    /* Altura automática */
+    display: flex;
+    align-items: center;
     gap: 2px;
-    /* Gap normal */
-    display: flex;
-    align-items: center;
 }
 
-/* Resetear estilos de botones slim a normales */
-.slim-mode .vote-btn {
-    height: 24px;
-    /* Pequeños */
-    width: 24px;
-    border-radius: 4px;
-    /* Redondeados */
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    border: none;
-    /* Sin borde divisorio */
-    color: var(--text-muted);
-}
-
-/* Hover states normales */
-.slim-mode .vote-btn:hover {
-    background-color: var(--bg-input);
-}
-
-.slim-mode .vote-btn.upvote:hover,
-.slim-mode .vote-btn.upvote.active {
-    color: var(--upvote);
-    background-color: rgba(34, 197, 94, 0.1);
-}
-
-.slim-mode .vote-btn.downvote:hover,
-.slim-mode .vote-btn.downvote.active {
-    color: var(--downvote);
-    background-color: rgba(239, 68, 68, 0.1);
-}
+/* Ya no redefino .vote-btn aquí, usará el global */
 
 /* Touched state adaptation for Slim Mode */
 .slim-mode .phone-line.touched {
