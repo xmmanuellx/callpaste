@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CallPaste - Lista de Contactos</title>
+    <meta name="description" content="Lista de números de teléfono compartida via CallPaste.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* View-specific styles */
+        .view-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        .view-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .view-header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .view-header p {
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+        }
+
+        .view-list {
+            margin-bottom: 2rem;
+        }
+
+        .view-footer {
+            text-align: center;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .view-footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+        }
+
+        .view-footer a:hover {
+            color: var(--text);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state h2 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Phone lines in view mode */
+        .view-list .phone-line {
+            cursor: pointer;
+        }
+
+        .view-list .vote-buttons {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="view-container">
+        <!-- Header -->
+        <header class="view-header">
+            <button id="theme-toggle" class="theme-toggle" title="Cambiar tema"
+                style="position: absolute; right: 1.5rem; top: 1.5rem;">
+                <span class="icon-sun">☀</span>
+                <span class="icon-moon">☾</span>
+            </button>
+            <h1>Lista de Contactos</h1>
+            <p id="item-count">Cargando...</p>
+        </header>
+
+        <!-- Phone List -->
+        <div class="view-list" id="phone-list">
+            <div class="empty-state">
+                <h2>Sin contenido</h2>
+                <p>No hay números para mostrar.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="view-footer">
+            <a href="index.html">Crear tu propia lista → CallPaste</a>
+        </footer>
+    </div>
+
+    <script>
+        // Country codes dictionary
+        const countryCodes = {
+            '1': { name: 'USA/CA', flag: '🇺🇸' },
+            '1809': { name: 'RD', flag: '🇩🇴' },
+            '1829': { name: 'RD', flag: '🇩🇴' },
+            '1849': { name: 'RD', flag: '🇩🇴' },
+            '1787': { name: 'PR', flag: '🇵🇷' },
+            '52': { name: 'MX', flag: '🇲🇽' },
+            '53': { name: 'CU', flag: '🇨🇺' },
+            '54': { name: 'AR', flag: '🇦🇷' },
+            '55': { name: 'BR', flag: '🇧🇷' },
+            '56': { name: 'CL', flag: '🇨🇱' },
+            '57': { name: 'CO', flag: '🇨🇴' },
+            '58': { name: 'VE', flag: '🇻🇪' },
+            '34': { name: 'ES', flag: '🇪🇸' },
+            '33': { name: 'FR', flag: '🇫🇷' },
+            '44': { name: 'UK', flag: '🇬🇧' },
+            '49': { name: 'DE', flag: '🇩🇪' },
+            '39': { name: 'IT', flag: '🇮🇹' },
+            '351': { name: 'PT', flag: '🇵🇹' },
+            '502': { name: 'GT', flag: '🇬🇹' },
+            '503': { name: 'SV', flag: '🇸🇻' },
+            '504': { name: 'HN', flag: '🇭🇳' },
+            '505': { name: 'NI', flag: '🇳🇮' },
+            '506': { name: 'CR', flag: '🇨🇷' },
+            '507': { name: 'PA', flag: '🇵🇦' },
+            '509': { name: 'HT', flag: '🇭🇹' },
+            '51': { name: 'PE', flag: '🇵🇪' },
+            '591': { name: 'BO', flag: '🇧🇴' },
+            '593': { name: 'EC', flag: '🇪🇨' },
+            '595': { name: 'PY', flag: '🇵🇾' },
+            '598': { name: 'UY', flag: '🇺🇾' },
+        };
+
+        function getCountryFromPhone(phone) {
+            let cleaned = phone.replace(/[^\d]/g, '');
+            for (let length = 4; length >= 1; length--) {
+                const prefix = cleaned.substring(0, length);
+                if (countryCodes[prefix]) {
+                    return countryCodes[prefix];
+                }
+            }
+            return null;
+        }
+
+        function isPhoneNumber(str) {
+            const cleaned = str.replace(/[\s\-\(\)\+\.]/g, '');
+            const digitCount = (cleaned.match(/\d/g) || []).length;
+            return digitCount >= 7 && digitCount <= 15;
+        }
+
+        function formatPhoneForLink(phone) {
+            return phone.replace(/[^\d\+]/g, '');
+        }
+
+        function loadContent() {
+            const hash = window.location.hash.slice(1);
+            const listContainer = document.getElementById('phone-list');
+            const itemCount = document.getElementById('item-count');
+
+            if (!hash) {
+                return;
+            }
+
+            try {
+                const decoded = decodeURIComponent(escape(atob(decodeURIComponent(hash))));
+                const lines = decoded.split('\n').filter(line => line.trim() !== '');
+
+                if (lines.length === 0) {
+                    return;
+                }
+
+                itemCount.textContent = `${lines.length} número${lines.length !== 1 ? 's' : ''}`;
+
+                let html = '';
+                lines.forEach((line, index) => {
+                    const trimmedLine = line.trim();
+                    const lineNum = index + 1;
+
+                    if (isPhoneNumber(trimmedLine)) {
+                        const phoneLink = formatPhoneForLink(trimmedLine);
+                        const country = getCountryFromPhone(phoneLink);
+                        const countryBadge = country
+                            ? `<span class="country-badge">${country.flag} ${country.name}</span>`
+                            : '';
+
+                        html += `
+                            <div class="phone-line" data-tel="${phoneLink}" onclick="window.location.href='tel:${phoneLink}'">
+                                <div class="phone-content">
+                                    <span class="line-number">${lineNum}</span>
+                                    <span class="phone-link">${trimmedLine}</span>
+                                </div>
+                                <div class="line-actions">
+                                    ${countryBadge}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `<div class="text-line"><span class="line-number">${lineNum}</span>${trimmedLine}</div>`;
+                    }
+                });
+
+                listContainer.innerHTML = html;
+
+            } catch (e) {
+                console.error('Error decoding content:', e);
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadTheme();
+            loadContent();
+
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        });
+    </script>
+</body>
+
+</html>

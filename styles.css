@@ -1,0 +1,558 @@
+/* ============================================
+   CallPaste - Minimalist Black & White Design
+   ============================================ */
+
+/* Theme Variables */
+:root {
+    --transition: 200ms ease;
+}
+
+/* Dark Theme (Default) */
+[data-theme="dark"] {
+    --bg: #000000;
+    --bg-card: #0a0a0a;
+    --bg-input: #111111;
+    --border: #222222;
+    --text: #ffffff;
+    --text-secondary: #888888;
+    --text-muted: #555555;
+    --accent: #ffffff;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg: #ffffff;
+    --bg-card: #fafafa;
+    --bg-input: #f5f5f5;
+    --border: #e0e0e0;
+    --text: #000000;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --accent: #000000;
+}
+
+/* Vote Button Colors (always colored) */
+:root {
+    --upvote: #22c55e;
+    --downvote: #ef4444;
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    transition: background var(--transition), color var(--transition);
+}
+
+/* App Container */
+.app-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    margin-bottom: 2rem;
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.tagline {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-input);
+}
+
+[data-theme="dark"] .icon-sun {
+    display: none;
+}
+
+[data-theme="dark"] .icon-moon {
+    display: block;
+}
+
+[data-theme="light"] .icon-sun {
+    display: block;
+}
+
+[data-theme="light"] .icon-moon {
+    display: none;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.badge {
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Textarea */
+.content-textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.content-textarea:focus {
+    outline: none;
+    border-color: var(--text-muted);
+}
+
+.content-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Input */
+.input {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: border-color var(--transition);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--text-muted);
+}
+
+/* Format Section */
+.format-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.format-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.format-row .input {
+    width: 120px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: var(--border);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    background: var(--text);
+}
+
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+}
+
+.btn-ghost:hover {
+    background: var(--bg-input);
+    border-color: var(--border);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Preview Container */
+.preview-container {
+    background: var(--bg-input);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 100px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.placeholder-text {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Phone Line Styling */
+.phone-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem 0.75rem;
+    margin: 0.25rem 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.phone-line:hover {
+    border-color: var(--text-muted);
+}
+
+.phone-line.touched {
+    border-color: var(--text);
+    background: var(--bg);
+}
+
+/* Line number - separate from phone */
+.line-number {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    min-width: 24px;
+    margin-right: 0.75rem;
+    user-select: none;
+}
+
+/* Phone content wrapper */
+.phone-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.phone-link {
+    color: var(--text);
+    text-decoration: none;
+    font-family: 'SF Mono', monospace;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    pointer-events: none;
+    /* Let parent handle click */
+}
+
+.phone-link:hover {
+    text-decoration: none;
+}
+
+.text-line {
+    padding: 0.5rem 0.75rem;
+    color: var(--text-secondary);
+    font-family: 'SF Mono', monospace;
+    font-size: 0.875rem;
+    border-left: 2px solid var(--border);
+    margin: 0.25rem 0;
+}
+
+/* Line Actions */
+.line-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Country Badge */
+.country-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-input);
+    border-radius: 100px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.country-badge-inline {
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+}
+
+/* Vote Buttons */
+.vote-buttons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.vote-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    line-height: 1;
+    opacity: 0.3;
+    transition: var(--transition);
+    color: var(--text-muted);
+}
+
+.vote-btn:hover {
+    opacity: 0.7;
+}
+
+/* Vote colors stay colored! */
+.vote-btn.upvote:hover,
+.vote-btn.upvote.active {
+    color: var(--upvote);
+    opacity: 1;
+}
+
+.vote-btn.downvote:hover,
+.vote-btn.downvote.active {
+    color: var(--downvote);
+    opacity: 1;
+}
+
+/* Share Section */
+.share-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn-share {
+    flex: 1;
+    min-width: 100px;
+}
+
+/* QR Section */
+.qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.qr-container {
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 8px;
+}
+
+#qr-code canvas,
+#qr-code img {
+    display: block;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: auto;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--text);
+    color: var(--bg);
+    padding: 0.75rem 1.25rem;
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 100px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 1rem;
+    }
+
+    .format-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .format-row .input {
+        width: 100%;
+    }
+
+    .format-row .btn {
+        width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .share-buttons {
+        flex-direction: column;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.phone-line,
+.text-line {
+    animation: fadeIn 0.2s ease forwards;
+}
