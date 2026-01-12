@@ -527,15 +527,14 @@
         }
 
         function toggleViewMode() {
-            const list = document.getElementById('phone-list');
-            const isSlim = list.classList.toggle('slim-mode');
+            const isSlim = document.body.classList.toggle('slim-mode');
             localStorage.setItem('viewMode', isSlim ? 'slim' : 'normal');
         }
 
         function loadViewMode() {
             const savedMode = localStorage.getItem('viewMode');
             if (savedMode === 'slim') {
-                document.getElementById('phone-list').classList.add('slim-mode');
+                document.body.classList.add('slim-mode');
             }
         }
 
