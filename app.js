@@ -539,11 +539,20 @@ function generatePageId() {
 }
 
 /**
- * Get the shareable view URL
+ * Get the shareable view URL with compressed content
  */
 function getShareUrl() {
     const shareText = currentContent;
-    const encodedContent = encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
+
+    // Use LZString compression if available (much smaller URLs)
+    let encodedContent;
+    if (typeof LZString !== 'undefined') {
+        encodedContent = LZString.compressToEncodedURIComponent(shareText);
+    } else {
+        // Fallback to base64
+        encodedContent = encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
+    }
+
     // Point to view.html for a clean viewing experience
     const baseUrl = window.location.href.split('/').slice(0, -1).join('/');
     return baseUrl + '/view.html#' + encodedContent;
@@ -560,20 +569,26 @@ function generateQRCode() {
 
     const shareUrl = getShareUrl();
 
+    // Check URL length and warn if too long
+    if (shareUrl.length > 2000) {
+        showToast('Lista muy larga para QR');
+        console.warn('URL length:', shareUrl.length);
+    }
+
     // Generate QR code using qrcodejs syntax
     if (typeof QRCode !== 'undefined') {
         try {
             qrCodeInstance = new QRCode(elements.qrCode, {
                 text: shareUrl,
-                width: 160,
-                height: 160,
+                width: 200,
+                height: 200,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
+                correctLevel: QRCode.CorrectLevel.L // Lower correction = simpler QR
             });
         } catch (error) {
             console.error('Error generating QR code:', error);
-            showToast('Error QR');
+            showToast('Error QR - lista muy larga');
         }
     } else {
         console.warn('QRCode library not available');

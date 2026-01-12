@@ -103,6 +103,8 @@
         </footer>
     </div>
 
+    <!-- LZString for decompression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <script>
         // Country codes dictionary
         const countryCodes = {
@@ -169,7 +171,18 @@
             }
 
             try {
-                const decoded = decodeURIComponent(escape(atob(decodeURIComponent(hash))));
+                let decoded;
+
+                // Try LZString decompression first (new format)
+                if (typeof LZString !== 'undefined') {
+                    decoded = LZString.decompressFromEncodedURIComponent(hash);
+                }
+
+                // Fallback to base64 if decompression didn't work (old format)
+                if (!decoded) {
+                    decoded = decodeURIComponent(escape(atob(decodeURIComponent(hash))));
+                }
+
                 const lines = decoded.split('\n').filter(line => line.trim() !== '');
 
                 if (lines.length === 0) {
