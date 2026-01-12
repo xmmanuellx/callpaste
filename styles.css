@@ -633,70 +633,73 @@ body {
     border-left: none;
     border-right: none;
     border-top: none;
-    padding: 0;
-    height: 44px;
+    padding: 0 0.5rem;
+    /* Padding lateral pequeño */
+    height: 34px;
+    /* Súper fino */
 }
 
 .slim-mode .phone-content {
-    padding-left: 0.75rem;
+    padding-left: 0.25rem;
     height: 100%;
 }
 
 .slim-mode .line-actions {
     height: 100%;
-    gap: 0;
+    gap: 0.5rem;
+    /* Separación normal entre elementos */
+    padding-right: 0.5rem;
 }
 
 .slim-mode .country-badge {
-    margin-right: 0.5rem;
+    margin-right: 0;
     background: transparent;
     padding: 0;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    opacity: 0.7;
 }
 
 .slim-mode .vote-buttons {
-    height: 100%;
-    gap: 0;
+    height: auto;
+    /* Altura automática */
+    gap: 2px;
+    /* Gap normal */
+    display: flex;
+    align-items: center;
 }
 
+/* Resetear estilos de botones slim a normales */
 .slim-mode .vote-btn {
-    height: 100%;
-    width: 44px;
-    border-radius: 0;
+    height: 24px;
+    /* Pequeños */
+    width: 24px;
+    border-radius: 4px;
+    /* Redondeados */
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
     background-color: transparent;
-    /* Asegurar transparence */
-}
-
-/* Base colors for buttons in slim mode */
-.slim-mode .vote-btn {
-    border-left: 1px solid var(--border);
+    border: none;
+    /* Sin borde divisorio */
     color: var(--text-muted);
 }
 
-.slim-mode .vote-btn.upvote:hover {
-    background-color: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
+/* Hover states normales */
+.slim-mode .vote-btn:hover {
+    background-color: var(--bg-input);
 }
 
-.slim-mode .vote-btn.downvote:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-/* Active states (Solid colors only when active) */
+.slim-mode .vote-btn.upvote:hover,
 .slim-mode .vote-btn.upvote.active {
-    background-color: #22c55e;
-    color: #ffffff;
+    color: var(--upvote);
+    background-color: rgba(34, 197, 94, 0.1);
 }
 
+.slim-mode .vote-btn.downvote:hover,
 .slim-mode .vote-btn.downvote.active {
-    background-color: #ef4444;
-    color: #ffffff;
+    color: var(--downvote);
+    background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* Touched state adaptation for Slim Mode */
