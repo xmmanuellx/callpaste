@@ -428,6 +428,12 @@
                     if (e.target.classList.contains('vote-btn')) {
                         return; // Don't call if clicking vote buttons
                     }
+
+                    // Remove 'touched' class from all lines
+                    phoneLines.forEach(l => l.classList.remove('touched'));
+                    // Add 'touched' class to the clicked line
+                    this.classList.add('touched');
+
                     const tel = this.getAttribute('data-tel');
                     if (tel) {
                         window.location.href = 'tel:' + tel;
