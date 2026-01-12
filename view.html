@@ -20,21 +20,9 @@
         }
 
         .view-header {
-            text-align: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border);
-        }
-
-        .view-header h1 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .view-header p {
-            color: var(--text-muted);
-            font-size: 0.8125rem;
         }
 
         .view-list {
@@ -79,8 +67,14 @@
 <body>
     <div class="view-container">
         <!-- Header -->
-        <header class="view-header">
-            <div style="position: absolute; right: 1.5rem; top: 1.5rem; display: flex; gap: 0.5rem;">
+        <header class="view-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div class="header-info" style="text-align: left;">
+                <h1 style="font-size: 1.5rem; margin-bottom: 0.25rem;">Lista</h1>
+                <p id="item-count" style="font-size: 0.875rem; color: var(--text-secondary);">Cargando...</p>
+            </div>
+
+            <div class="header-controls" style="display: flex; gap: 0.5rem;">
                 <button id="view-mode-toggle" class="theme-toggle" title="Modo Compacto/Normal">
                     <span class="icon-list">☰</span>
                 </button>
@@ -89,8 +83,6 @@
                     <span class="icon-moon">☾</span>
                 </button>
             </div>
-            <h1>Lista de Contactos</h1>
-            <p id="item-count">Cargando...</p>
         </header>
 
         <!-- Phone List -->
