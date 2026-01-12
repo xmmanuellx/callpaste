@@ -436,7 +436,10 @@
 
                     const tel = this.getAttribute('data-tel');
                     if (tel) {
-                        window.location.href = 'tel:' + tel;
+                        // Small delay to ensure the UI updates (green highlight) before the call starts
+                        setTimeout(() => {
+                            window.location.href = 'tel:' + tel;
+                        }, 300);
                     }
                 });
 
