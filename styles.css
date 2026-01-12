@@ -624,3 +624,78 @@ body {
     gap: 1rem;
     justify-content: center;
 }
+
+/* --- Slim / Flat Mode --- */
+.slim-mode .phone-line {
+    border-radius: 0;
+    margin: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: 0;
+    height: 44px;
+}
+
+.slim-mode .phone-content {
+    padding-left: 0.75rem;
+    height: 100%;
+}
+
+.slim-mode .line-actions {
+    height: 100%;
+    gap: 0;
+}
+
+.slim-mode .country-badge {
+    margin-right: 0.5rem;
+    background: transparent;
+    padding: 0;
+    font-size: 0.75rem;
+}
+
+.slim-mode .vote-buttons {
+    height: 100%;
+    gap: 0;
+}
+
+.slim-mode .vote-btn {
+    height: 100%;
+    width: 44px;
+    border-radius: 0;
+    padding: 0;
+    opacity: 1;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+/* Base colors for buttons in slim mode */
+.slim-mode .vote-btn.upvote {
+    background-color: #14532d; /* Verde oscuro */
+}
+
+.slim-mode .vote-btn.downvote {
+    background-color: #7f1d1d; /* Rojo oscuro */
+}
+
+/* Active/Hover states */
+.slim-mode .vote-btn.upvote:hover,
+.slim-mode .vote-btn.upvote.active {
+    background-color: #22c55e; /* Verde brillante */
+    color: #fff;
+}
+
+.slim-mode .vote-btn.downvote:hover,
+.slim-mode .vote-btn.downvote.active {
+    background-color: #ef4444; /* Rojo brillante */
+    color: #fff;
+}
+
+/* Touched state adaptation for Slim Mode */
+.slim-mode .phone-line.touched {
+    border-left: none !important;
+    transform: none;
+    box-shadow: inset 0 -2px 0 0 #22c55e;
+}
