@@ -628,27 +628,43 @@ body {
 
 /* --- Slim / Flat Mode --- */
 .slim-mode .phone-line {
+    display: flex;
+    /* Asegurar flex */
+    align-items: center;
+    /* Centrado vertical perfecto */
     border-radius: 0;
     margin: 0;
     border-left: none;
     border-right: none;
     border-top: none;
     padding: 0 0.5rem;
-    /* Padding lateral pequeño */
     height: 38px;
-    /* Un pelín más alto que 34px para que quepan bien los botones de 24px + paddings */
+    border-bottom: 1px solid var(--border);
+    /* Borde separador simple */
+}
+
+/* El último item no necesita borde inferior si se desea */
+.slim-mode .phone-line:last-child {
+    border-bottom: none;
 }
 
 .slim-mode .phone-content {
+    display: flex;
+    align-items: center;
     padding-left: 0.25rem;
-    height: 100%;
+    height: 38px;
+    /* Forzar altura match */
+    flex: 1;
 }
 
 .slim-mode .line-actions {
-    height: 100%;
+    display: flex;
+    align-items: center;
+    /* Centrar items */
     gap: 0.5rem;
-    /* Separación normal entre elementos */
     padding-right: 0.5rem;
+    height: 38px;
+    /* Forzar altura */
 }
 
 .slim-mode .country-badge {
@@ -657,6 +673,8 @@ body {
     padding: 0;
     font-size: 0.7rem;
     opacity: 0.7;
+    height: auto;
+    /* Dejar que se ajuste */
 }
 
 .slim-mode .vote-buttons {
@@ -669,7 +687,13 @@ body {
 
 /* Touched state adaptation for Slim Mode */
 .slim-mode .phone-line.touched {
-    border-left: none !important;
+    border-left: 4px solid #22c55e !important;
+    /* Barra lateral sólida */
+    padding-left: calc(0.5rem - 4px);
+    /* Compensar padding para que el texto no baile */
     transform: none;
-    box-shadow: inset 0 -2px 0 0 #22c55e;
+    box-shadow: none;
+    animation: none;
+    /* Quitar animación pulse si molesta en slim, o dejarla sutil */
+    background-color: rgba(34, 197, 94, 0.15) !important;
 }
