@@ -550,6 +550,9 @@
                     // Add 'touched' class to the clicked line
                     this.classList.add('touched');
 
+                    // Auto-scroll focused item to center (UX Improvement)
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
                     const tel = this.getAttribute('data-tel');
                     if (tel) {
                         window.location.href = 'tel:' + tel;
