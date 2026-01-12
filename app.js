@@ -539,23 +539,70 @@ function generatePageId() {
 }
 
 /**
- * Get the shareable view URL with compressed content
+ * Save content to jsonblob.com and get a short ID
+ */
+async function saveToJsonBlob(content) {
+    try {
+        const response = await fetch('https://jsonblob.com/api/jsonBlob', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ phones: content })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save');
+        }
+
+        // Get the blob ID from the Location header or URL
+        const location = response.headers.get('Location') || response.url;
+        const blobId = location.split('/').pop();
+        return blobId;
+    } catch (error) {
+        console.error('Error saving to jsonblob:', error);
+        return null;
+    }
+}
+
+/**
+ * Current share URL (set after saving)
+ */
+let currentShareUrl = null;
+
+/**
+ * Get the shareable view URL (uses cached URL if available)
  */
 function getShareUrl() {
-    const shareText = currentContent;
+    return currentShareUrl || '';
+}
 
-    // Use LZString compression if available (much smaller URLs)
-    let encodedContent;
-    if (typeof LZString !== 'undefined') {
-        encodedContent = LZString.compressToEncodedURIComponent(shareText);
+/**
+ * Generate share URL by saving content to jsonblob
+ */
+async function generateShareUrl() {
+    const shareText = currentContent;
+    const baseUrl = window.location.href.split('/').slice(0, -1).join('/');
+
+    showToast('Guardando...');
+
+    // Save to jsonblob and get ID
+    const blobId = await saveToJsonBlob(shareText);
+
+    if (blobId) {
+        currentShareUrl = baseUrl + '/view.html#id=' + blobId;
+        showToast('Listo');
     } else {
-        // Fallback to base64
-        encodedContent = encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
+        // Fallback to local compression if jsonblob fails
+        showToast('Usando modo local');
+        const encodedContent = typeof LZString !== 'undefined' ?
+            LZString.compressToEncodedURIComponent(shareText) :
+            encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
+        currentShareUrl = baseUrl + '/view.html#' + encodedContent;
     }
 
-    // Point to view.html for a clean viewing experience
-    const baseUrl = window.location.href.split('/').slice(0, -1).join('/');
-    return baseUrl + '/view.html#' + encodedContent;
+    return currentShareUrl;
 }
 
 /**
@@ -563,17 +610,22 @@ function getShareUrl() {
  */
 let qrCodeInstance = null;
 
-function generateQRCode() {
+async function generateQRCode() {
     // Clear previous QR code
     elements.qrCode.innerHTML = '';
+    elements.qrCode.textContent = 'Generando...';
 
-    const shareUrl = getShareUrl();
+    // Generate the share URL (saves to jsonblob)
+    const shareUrl = await generateShareUrl();
 
-    // Check URL length and warn if too long
-    if (shareUrl.length > 2000) {
-        showToast('Lista muy larga para QR');
-        console.warn('URL length:', shareUrl.length);
+    if (!shareUrl) {
+        elements.qrCode.textContent = 'Error';
+        return;
     }
+
+    elements.qrCode.textContent = '';
+
+    console.log('QR URL length:', shareUrl.length);
 
     // Generate QR code using qrcodejs syntax
     if (typeof QRCode !== 'undefined') {
@@ -584,11 +636,11 @@ function generateQRCode() {
                 height: 200,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.L // Lower correction = simpler QR
+                correctLevel: QRCode.CorrectLevel.L
             });
         } catch (error) {
             console.error('Error generating QR code:', error);
-            showToast('Error QR - lista muy larga');
+            showToast('Error QR');
         }
     } else {
         console.warn('QRCode library not available');
