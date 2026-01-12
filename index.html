@@ -47,7 +47,7 @@
                             maxlength="10">
                         <button id="btn-add-prefix" class="btn">+ Prefijo</button>
                         <button id="btn-remove-prefix" class="btn btn-ghost">- Prefijo</button>
-                        <button id="btn-number-lines" class="btn btn-ghost">123</button>
+
                     </div>
                 </div>
 
@@ -114,6 +114,19 @@
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Prefix Warning Modal -->
+    <div id="prefix-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>⚠️ ¿Falta el prefijo?</h3>
+            <p>Detectamos números sin el símbolo <strong>+</strong> al inicio.</p>
+            <p class="modal-hint">Para que el enlace funcione internacionalmente, es mejor tenerlo.</p>
+            <div class="modal-actions">
+                <button id="btn-add-plus" class="btn btn-primary">Añadir + a todos</button>
+                <button id="btn-generate-anyway" class="btn btn-ghost">Generar así</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

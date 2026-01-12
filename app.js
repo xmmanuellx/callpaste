@@ -9,7 +9,6 @@ const elements = {
     prefixInput: document.getElementById('prefix-input'),
     btnAddPrefix: document.getElementById('btn-add-prefix'),
     btnRemovePrefix: document.getElementById('btn-remove-prefix'),
-    btnNumberLines: document.getElementById('btn-number-lines'),
     btnGenerate: document.getElementById('btn-generate'),
     btnClear: document.getElementById('btn-clear'),
     previewContainer: document.getElementById('preview-container'),
@@ -23,7 +22,11 @@ const elements = {
     qrCode: document.getElementById('qr-code'),
     toast: document.getElementById('toast'),
     toastMessage: document.getElementById('toast-message'),
-    themeToggle: document.getElementById('theme-toggle')
+    themeToggle: document.getElementById('theme-toggle'),
+    // Modal elements
+    prefixModal: document.getElementById('prefix-modal'),
+    btnAddPlus: document.getElementById('btn-add-plus'),
+    btnGenerateAnyway: document.getElementById('btn-generate-anyway')
 };
 
 // State
@@ -276,9 +279,7 @@ function updateLineCount() {
  * Check if string is a phone number
  */
 function isPhoneNumber(str) {
-    // Remove common phone formatting characters
     const cleaned = str.replace(/[\s\-\(\)\+\.]/g, '');
-    // Check if it's mostly digits (at least 7 digits for a phone number)
     const digitCount = (cleaned.match(/\d/g) || []).length;
     return digitCount >= 7 && digitCount <= 15 && /^[\d\+\-\(\)\s\.]+$/.test(str.trim());
 }
@@ -287,7 +288,6 @@ function isPhoneNumber(str) {
  * Format phone number for tel: link
  */
 function formatPhoneForLink(phone) {
-    // Remove all non-digit characters except +
     return phone.replace(/[^\d\+]/g, '');
 }
 
@@ -295,24 +295,19 @@ function formatPhoneForLink(phone) {
  * Get country info from phone number based on prefix
  */
 function getCountryFromPhone(phone) {
-    // Clean the phone number - remove everything except digits
     let cleaned = phone.replace(/[^\d]/g, '');
 
-    // If starts with +, handle it
     if (phone.startsWith('+')) {
         cleaned = phone.replace(/[^\d]/g, '');
     }
 
-    // Try matching from longest prefix to shortest (4 digits down to 1)
-    // This ensures we match specific codes like 1809 (Dominican Republic) before 1 (USA)
     for (let length = 4; length >= 1; length--) {
         const prefix = cleaned.substring(0, length);
         if (countryCodes[prefix]) {
             return countryCodes[prefix];
         }
     }
-
-    return null; // No country found
+    return null;
 }
 
 /**
@@ -363,24 +358,32 @@ function removePrefix() {
 }
 
 /**
- * Add line numbers to all lines
+ * Add + symbol to lines that don't have it (automating missing prefix)
  */
-function numberLines() {
+function addPlusToAll() {
     const lines = getLines();
-    if (lines.length === 0) {
-        showToast('Sin contenido');
-        return;
-    }
+    const newLines = lines.map(line => {
+        const cleaned = line.trim();
+        // Add + only if implies a phone number and doesn't have it
+        if (isPhoneNumber(cleaned) && !cleaned.startsWith('+')) {
+            return '+' + cleaned;
+        }
+        return line;
+    });
 
-    const newLines = lines.map((line, index) => `${index + 1}. ${line}`);
     setLines(newLines);
-    showToast('Numerado');
+    elements.prefixModal.style.display = 'none';
+    showToast('Símbolos + agregados');
+
+    // Auto-generate after fixing
+    generatePreview(true);
 }
 
 /**
  * Generate the preview with clickable phone links
+ * @param {boolean} force - Force generation ignoring warnings
  */
-function generatePreview() {
+function generatePreview(force = false) {
     const lines = getLines();
 
     if (lines.length === 0) {
@@ -388,15 +391,31 @@ function generatePreview() {
         return;
     }
 
+    // Check for missing prefixes if not forced
+    if (!force) {
+        const hasMissingPrefix = lines.some(line => {
+            const cleaned = line.trim();
+            // Check if it looks like a phone number but doesn't start with +
+            // (Assuming at least 7 digits to be a phone number)
+            return isPhoneNumber(cleaned) && !cleaned.startsWith('+');
+        });
+
+        if (hasMissingPrefix) {
+            elements.prefixModal.style.display = 'flex';
+            return;
+        }
+    }
+
+    // Close modal if open
+    elements.prefixModal.style.display = 'none';
+
     currentContent = elements.contentInput.value;
 
-    // Generate HTML for preview
     let html = '';
     lines.forEach((line, index) => {
         const trimmedLine = line.trim();
         const lineNum = index + 1;
 
-        // Vote buttons HTML
         const voteButtons = `
             <div class="vote-buttons">
                 <button class="vote-btn upvote" title="Funciona">▲</button>
@@ -405,7 +424,6 @@ function generatePreview() {
         `;
 
         if (isPhoneNumber(trimmedLine)) {
-            // Extract the phone number (keeping original format for display)
             const phoneLink = formatPhoneForLink(trimmedLine);
             const country = getCountryFromPhone(phoneLink);
             const countryBadge = country
@@ -425,7 +443,6 @@ function generatePreview() {
                 </div>
             `;
         } else {
-            // Check if line contains phone numbers mixed with text
             const phoneRegex = /(\+?\d[\d\s\-\(\)\.]{6,})/g;
             let processedLine = trimmedLine;
 
@@ -450,61 +467,46 @@ function generatePreview() {
     elements.previewContainer.innerHTML = html;
     elements.shareSection.style.display = 'block';
 
-    // Add click handlers to track touched lines
     addPhoneLineClickHandlers();
 
-    // Generate unique page ID for sharing
     generatedPageId = generatePageId();
-
-    // Generate QR code
     generateQRCode();
 
     showToast('Generado');
-
-    // Scroll to preview
     elements.previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
- * Add click handlers to phone lines to track which was last touched
+ * Add click handlers to phone lines
  */
 function addPhoneLineClickHandlers() {
     const phoneLines = elements.previewContainer.querySelectorAll('.phone-line');
 
     phoneLines.forEach(line => {
-        // Handle line click - call phone number and mark as touched
         line.addEventListener('click', function (e) {
-            // Don't do anything if clicking on vote buttons
             if (e.target.classList.contains('vote-btn')) {
                 return;
             }
 
-            // Remove 'touched' class from all lines
             phoneLines.forEach(l => l.classList.remove('touched'));
-            // Add 'touched' class to the clicked line
             this.classList.add('touched');
 
-            // Get the phone number from data attribute and call it
             const tel = this.getAttribute('data-tel');
             if (tel) {
                 window.location.href = 'tel:' + tel;
             }
         });
 
-        // Handle upvote button
         const upvoteBtn = line.querySelector('.vote-btn.upvote');
         const downvoteBtn = line.querySelector('.vote-btn.downvote');
 
         if (upvoteBtn) {
             upvoteBtn.addEventListener('click', function (e) {
-                e.stopPropagation(); // Prevent triggering line click
-
-                // Toggle upvote
+                e.stopPropagation();
                 if (this.classList.contains('active')) {
                     this.classList.remove('active');
                 } else {
                     this.classList.add('active');
-                    // Remove downvote if active
                     if (downvoteBtn) {
                         downvoteBtn.classList.remove('active');
                     }
@@ -514,14 +516,11 @@ function addPhoneLineClickHandlers() {
 
         if (downvoteBtn) {
             downvoteBtn.addEventListener('click', function (e) {
-                e.stopPropagation(); // Prevent triggering line click
-
-                // Toggle downvote
+                e.stopPropagation();
                 if (this.classList.contains('active')) {
                     this.classList.remove('active');
                 } else {
                     this.classList.add('active');
-                    // Remove upvote if active
                     if (upvoteBtn) {
                         upvoteBtn.classList.remove('active');
                     }
@@ -531,25 +530,17 @@ function addPhoneLineClickHandlers() {
     });
 }
 
-/**
- * Generate a unique page ID
- */
 function generatePageId() {
     return Math.random().toString(36).substring(2, 10);
 }
 
-/**
- * Get the shareable view URL with compressed content
- */
 function getShareUrl() {
     const shareText = currentContent;
     let encodedContent;
 
-    // Use LZString compression if available (much smaller URLs)
     if (typeof LZString !== 'undefined') {
         encodedContent = LZString.compressToEncodedURIComponent(shareText);
     } else {
-        // Fallback to base64
         encodedContent = encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
     }
 
@@ -557,24 +548,17 @@ function getShareUrl() {
     return baseUrl + '/view.html#' + encodedContent;
 }
 
-/**
- * Generate QR code
- */
 let qrCodeInstance = null;
 
 function generateQRCode() {
-    // Clear previous QR code
     elements.qrCode.innerHTML = '';
-
     const shareUrl = getShareUrl();
 
-    // Check URL length and warn if too long
     if (shareUrl.length > 2000) {
         showToast('Lista muy larga para QR');
         console.warn('URL length:', shareUrl.length);
     }
 
-    // Generate QR code using qrcodejs syntax
     if (typeof QRCode !== 'undefined') {
         try {
             qrCodeInstance = new QRCode(elements.qrCode, {
@@ -583,7 +567,7 @@ function generateQRCode() {
                 height: 200,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.L // Lower correction = simpler QR
+                correctLevel: QRCode.CorrectLevel.L
             });
         } catch (error) {
             console.error('Error generating QR code:', error);
@@ -594,72 +578,51 @@ function generateQRCode() {
     }
 }
 
-/**
- * Download QR code as image
- */
 function downloadQR() {
     const canvas = elements.qrCode.querySelector('canvas');
     if (!canvas) {
         showToast('Genera primero');
         return;
     }
-
     const link = document.createElement('a');
     link.download = `callpaste-qr-${generatedPageId}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-
     showToast('QR descargado');
 }
 
-/**
- * Share on WhatsApp
- */
 function shareWhatsApp() {
     if (!currentContent) {
         showToast('Genera primero');
         return;
     }
-
     const shareUrl = getShareUrl();
     const message = encodeURIComponent('Lista de contactos: ' + shareUrl);
     window.open(`https://wa.me/?text=${message}`, '_blank');
-
     showToast('Abriendo WhatsApp');
 }
 
-/**
- * Share on Telegram
- */
 function shareTelegram() {
     if (!currentContent) {
         showToast('Genera primero');
         return;
     }
-
     const shareUrl = getShareUrl();
     const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Lista de contactos')}`;
     window.open(url, '_blank');
-
     showToast('Abriendo Telegram');
 }
 
-/**
- * Copy shareable URL to clipboard
- */
 async function copyContent() {
     if (!currentContent) {
         showToast('Genera primero');
         return;
     }
-
     const shareUrl = getShareUrl();
-
     try {
         await navigator.clipboard.writeText(shareUrl);
         showToast('URL copiada');
     } catch (err) {
-        // Fallback for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = shareUrl;
         document.body.appendChild(textarea);
@@ -670,9 +633,6 @@ async function copyContent() {
     }
 }
 
-/**
- * Clear all content
- */
 function clearContent() {
     elements.contentInput.value = '';
     elements.previewContainer.innerHTML = '<p class="placeholder-text">El contenido aparecerá aquí...</p>';
@@ -684,9 +644,6 @@ function clearContent() {
     showToast('Limpiado');
 }
 
-/**
- * Load content from URL hash (for shared links)
- */
 function loadFromHash() {
     const hash = window.location.hash.slice(1);
     if (hash) {
@@ -694,9 +651,8 @@ function loadFromHash() {
             const decoded = decodeURIComponent(escape(atob(decodeURIComponent(hash))));
             elements.contentInput.value = decoded;
             updateLineCount();
-            // Auto-generate preview
             setTimeout(() => {
-                generatePreview();
+                generatePreview(true); // Ignore warning for shared links loaded here
             }, 500);
         } catch (e) {
             console.log('Could not decode hash');
@@ -704,64 +660,50 @@ function loadFromHash() {
     }
 }
 
-/**
- * Initialize event listeners
- */
 function initEventListeners() {
-    // Format buttons
     elements.btnAddPrefix.addEventListener('click', addPrefix);
     elements.btnRemovePrefix.addEventListener('click', removePrefix);
-    elements.btnNumberLines.addEventListener('click', numberLines);
+    // Removed btnNumberLines listener
 
-    // Main actions
-    elements.btnGenerate.addEventListener('click', generatePreview);
+    elements.btnGenerate.addEventListener('click', () => generatePreview(false));
     elements.btnClear.addEventListener('click', clearContent);
 
-    // Share buttons
     elements.btnWhatsapp.addEventListener('click', shareWhatsApp);
     elements.btnTelegram.addEventListener('click', shareTelegram);
     elements.btnCopy.addEventListener('click', copyContent);
     elements.btnDownloadQr.addEventListener('click', downloadQR);
 
-    // Update line count on input
     elements.contentInput.addEventListener('input', updateLineCount);
 
-    // Theme toggle
     if (elements.themeToggle) {
         elements.themeToggle.addEventListener('click', toggleTheme);
     }
 
-    // Keyboard shortcuts
+    // Modal Listeners
+    elements.btnAddPlus.addEventListener('click', addPlusToAll);
+    elements.btnGenerateAnyway.addEventListener('click', () => generatePreview(true));
+
     document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + Enter to generate
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
-            generatePreview();
+            generatePreview(false);
         }
     });
 }
 
-/**
- * Toggle between light and dark theme
- */
 function toggleTheme() {
     const html = document.documentElement;
     const currentTheme = html.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
     html.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
 }
 
-/**
- * Load saved theme
- */
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme();
     initEventListeners();
