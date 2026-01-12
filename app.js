@@ -487,9 +487,7 @@ function addPhoneLineClickHandlers() {
             // Get the phone number from data attribute and call it
             const tel = this.getAttribute('data-tel');
             if (tel) {
-                setTimeout(() => {
-                    window.location.href = 'tel:' + tel;
-                }, 300);
+                window.location.href = 'tel:' + tel;
             }
         });
 
