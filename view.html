@@ -389,7 +389,63 @@
             return phone.replace(/[^\d\+]/g, '');
         }
 
-        function loadContent() {
+        function getIsoFromName(name) {
+            // Simple heuristic updates
+            if (name.includes('Unidos') || name.includes('United')) return 'US';
+            if (name.includes('Dominicana')) return 'DO';
+            if (name.includes('México')) return 'MX';
+            if (name.includes('España')) return 'ES';
+            if (name.includes('Colombia')) return 'CO';
+            if (name.includes('Argentina')) return 'AR';
+            if (name.includes('Venezuela')) return 'VE';
+            if (name.includes('Perú')) return 'PE';
+            if (name.includes('Chile')) return 'CL';
+
+            // Fallback: First letters of first 2 words
+            return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        // View Mode Logic: Normal -> Slim -> Grid -> Normal
+        const MODES = ['normal', 'slim', 'grid'];
+        const ICONS = { 'normal': '☰', 'slim': '☲', 'grid': '⊞' };
+
+        function toggleViewMode() {
+            const body = document.body;
+            let currentMode = localStorage.getItem('viewMode') || 'normal';
+
+            // Find next mode
+            let currentIndex = MODES.indexOf(currentMode);
+            let nextIndex = (currentIndex + 1) % MODES.length;
+            let nextMode = MODES[nextIndex];
+
+            // Update DOM classes
+            MODES.forEach(m => body.classList.remove(`${m}-mode`));
+            if (nextMode !== 'normal') {
+                body.classList.add(`${nextMode}-mode`);
+            }
+
+            // Update Icon
+            const btn = document.getElementById('view-mode-toggle');
+            btn.innerHTML = `<span class="icon-view">${ICONS[nextMode]}</span>`;
+
+            localStorage.setItem('viewMode', nextMode);
+        }
+
+        function loadViewMode() {
+            const savedMode = localStorage.getItem('viewMode') || 'normal';
+            const body = document.body;
+
+            MODES.forEach(m => body.classList.remove(`${m}-mode`));
+            if (savedMode !== 'normal') {
+                body.classList.add(`${savedMode}-mode`);
+            }
+
+            // Update Icon
+            const btn = document.getElementById('view-mode-toggle');
+            if (btn) btn.innerHTML = `<span class="icon-view">${ICONS[savedMode]}</span>`;
+        }
+
+        async function loadContent() {
             const hash = window.location.hash.slice(1);
             const listContainer = document.getElementById('phone-list');
             const itemCount = document.getElementById('item-count');
@@ -403,8 +459,6 @@
 
                 // Try LZString decompression first (compressed format)
                 if (typeof LZString !== 'undefined') {
-                    // Check if it looks like LZString (usually has special chars, not just base64)
-                    // But decompression is safe to try
                     decoded = LZString.decompressFromEncodedURIComponent(hash);
                 }
 
@@ -439,9 +493,16 @@
                     if (isPhoneNumber(trimmedLine)) {
                         const phoneLink = formatPhoneForLink(trimmedLine);
                         const country = getCountryFromPhone(phoneLink);
-                        const countryBadge = country
-                            ? `<span class="country-badge">${country.flag} ${country.name}</span>`
-                            : '';
+
+                        let countryBadge = '';
+                        if (country) {
+                            const iso = getIsoFromName(country.name);
+                            countryBadge = `<span class="country-badge">
+                                ${country.flag} 
+                                <span class="country-name-text">${country.name}</span>
+                                <span class="country-iso-text" style="display:none">${iso}</span>
+                            </span>`;
+                        }
 
                         html += `
                             <div class="phone-line" data-tel="${phoneLink}">
@@ -532,18 +593,6 @@
         function loadTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
-        }
-
-        function toggleViewMode() {
-            const isSlim = document.body.classList.toggle('slim-mode');
-            localStorage.setItem('viewMode', isSlim ? 'slim' : 'normal');
-        }
-
-        function loadViewMode() {
-            const savedMode = localStorage.getItem('viewMode');
-            if (savedMode === 'slim') {
-                document.body.classList.add('slim-mode');
-            }
         }
 
         // Initialize

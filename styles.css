@@ -713,3 +713,68 @@ body {
     /* Poner por encima para que el highlight se vea bien */
     position: relative;
 }
+/* --- Grid Mode (2 Columns) --- */
+body.grid-mode .phone-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+    border-top: none !important;
+}
+
+body.grid-mode .phone-line {
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 0.5rem !important;
+    height: auto !important;
+    min-height: 44px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    background: var(--bg-card) !important;
+    margin: 0 !important;
+}
+
+body.grid-mode .phone-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+body.grid-mode .line-number {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+
+body.grid-mode .phone-link {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.grid-mode .vote-buttons {
+    display: none !important;
+}
+
+body.grid-mode .country-badge {
+    margin-left: auto;
+    padding-left: 0.25rem;
+}
+
+/* Ocultar nombre completo del país en grid, mostrar bandera + ISO */
+body.grid-mode .country-name-text {
+    display: none;
+}
+
+body.grid-mode .country-iso-text {
+    display: inline-block !important;
+    font-weight: 600;
+    font-size: 0.7rem;
+    margin-left: 2px;
+}
+
+/* Touched en Grid */
+body.grid-mode .phone-line.touched {
+    border-color: #22c55e !important;
+    background-color: rgba(34, 197, 94, 0.1) !important;
+    border-left: 1px solid #22c55e !important; /* Reset borde izquierdo grueso */
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+}
