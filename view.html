@@ -161,7 +161,7 @@
             return phone.replace(/[^\d\+]/g, '');
         }
 
-        async function loadContent() {
+        function loadContent() {
             const hash = window.location.hash.slice(1);
             const listContainer = document.getElementById('phone-list');
             const itemCount = document.getElementById('item-count');
@@ -173,31 +173,20 @@
             try {
                 let decoded;
 
-                // Check if it's a jsonblob ID
-                if (hash.startsWith('id=')) {
-                    const blobId = hash.slice(3);
-                    itemCount.textContent = 'Cargando...';
+                // Try LZString decompression first (compressed format)
+                if (typeof LZString !== 'undefined') {
+                    // Check if it looks like LZString (usually has special chars, not just base64)
+                    // But decompression is safe to try
+                    decoded = LZString.decompressFromEncodedURIComponent(hash);
+                }
 
+                // Fallback to base64 if decompression didn't work (old format)
+                // LZString returns null if it fails to decompress
+                if (!decoded) {
                     try {
-                        const response = await fetch('https://jsonblob.com/api/jsonBlob/' + blobId);
-                        if (response.ok) {
-                            const data = await response.json();
-                            decoded = data.phones;
-                        }
-                    } catch (e) {
-                        console.error('Error loading from jsonblob:', e);
-                        itemCount.textContent = 'Error al cargar';
-                        return;
-                    }
-                } else {
-                    // Try LZString decompression first (compressed format)
-                    if (typeof LZString !== 'undefined') {
-                        decoded = LZString.decompressFromEncodedURIComponent(hash);
-                    }
-
-                    // Fallback to base64 if decompression didn't work (old format)
-                    if (!decoded) {
                         decoded = decodeURIComponent(escape(atob(decodeURIComponent(hash))));
+                    } catch (e) {
+                        // Ignore base64 error if LZString already failed
                     }
                 }
 
@@ -253,6 +242,7 @@
 
             } catch (e) {
                 console.error('Error decoding content:', e);
+                itemCount.textContent = 'Error al cargar contenido';
             }
         }
 

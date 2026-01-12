@@ -539,70 +539,22 @@ function generatePageId() {
 }
 
 /**
- * Save content to jsonblob.com and get a short ID
- */
-async function saveToJsonBlob(content) {
-    try {
-        const response = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ phones: content })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save');
-        }
-
-        // Get the blob ID from the Location header or URL
-        const location = response.headers.get('Location') || response.url;
-        const blobId = location.split('/').pop();
-        return blobId;
-    } catch (error) {
-        console.error('Error saving to jsonblob:', error);
-        return null;
-    }
-}
-
-/**
- * Current share URL (set after saving)
- */
-let currentShareUrl = null;
-
-/**
- * Get the shareable view URL (uses cached URL if available)
+ * Get the shareable view URL with compressed content
  */
 function getShareUrl() {
-    return currentShareUrl || '';
-}
-
-/**
- * Generate share URL by saving content to jsonblob
- */
-async function generateShareUrl() {
     const shareText = currentContent;
-    const baseUrl = window.location.href.split('/').slice(0, -1).join('/');
+    let encodedContent;
 
-    showToast('Guardando...');
-
-    // Save to jsonblob and get ID
-    const blobId = await saveToJsonBlob(shareText);
-
-    if (blobId) {
-        currentShareUrl = baseUrl + '/view.html#id=' + blobId;
-        showToast('Listo');
+    // Use LZString compression if available (much smaller URLs)
+    if (typeof LZString !== 'undefined') {
+        encodedContent = LZString.compressToEncodedURIComponent(shareText);
     } else {
-        // Fallback to local compression if jsonblob fails
-        showToast('Usando modo local');
-        const encodedContent = typeof LZString !== 'undefined' ?
-            LZString.compressToEncodedURIComponent(shareText) :
-            encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
-        currentShareUrl = baseUrl + '/view.html#' + encodedContent;
+        // Fallback to base64
+        encodedContent = encodeURIComponent(btoa(unescape(encodeURIComponent(shareText))));
     }
 
-    return currentShareUrl;
+    const baseUrl = window.location.href.split('/').slice(0, -1).join('/');
+    return baseUrl + '/view.html#' + encodedContent;
 }
 
 /**
@@ -610,22 +562,17 @@ async function generateShareUrl() {
  */
 let qrCodeInstance = null;
 
-async function generateQRCode() {
+function generateQRCode() {
     // Clear previous QR code
     elements.qrCode.innerHTML = '';
-    elements.qrCode.textContent = 'Generando...';
 
-    // Generate the share URL (saves to jsonblob)
-    const shareUrl = await generateShareUrl();
+    const shareUrl = getShareUrl();
 
-    if (!shareUrl) {
-        elements.qrCode.textContent = 'Error';
-        return;
+    // Check URL length and warn if too long
+    if (shareUrl.length > 2000) {
+        showToast('Lista muy larga para QR');
+        console.warn('URL length:', shareUrl.length);
     }
-
-    elements.qrCode.textContent = '';
-
-    console.log('QR URL length:', shareUrl.length);
 
     // Generate QR code using qrcodejs syntax
     if (typeof QRCode !== 'undefined') {
@@ -636,11 +583,11 @@ async function generateQRCode() {
                 height: 200,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.L
+                correctLevel: QRCode.CorrectLevel.L // Lower correction = simpler QR
             });
         } catch (error) {
             console.error('Error generating QR code:', error);
-            showToast('Error QR');
+            showToast('Error QR - lista muy larga');
         }
     } else {
         console.warn('QRCode library not available');
@@ -807,28 +754,16 @@ function toggleTheme() {
 }
 
 /**
- * Load saved theme preference
+ * Load saved theme
  */
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 }
 
-/**
- * Initialize the application
- */
-function init() {
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
     loadTheme();
     initEventListeners();
-    updateLineCount();
     loadFromHash();
-
-    // Check if QRCode library is loaded
-    if (typeof QRCode === 'undefined') {
-        console.warn('QRCode library not loaded. QR generation may not work.');
-    }
-}
-
-// Start the app when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
-
+});
