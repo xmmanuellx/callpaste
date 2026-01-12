@@ -73,10 +73,6 @@
         .view-list .phone-line {
             cursor: pointer;
         }
-
-        .view-list .vote-buttons {
-            display: none;
-        }
     </style>
 </head>
 
@@ -195,13 +191,17 @@
                             : '';
 
                         html += `
-                            <div class="phone-line" data-tel="${phoneLink}" onclick="window.location.href='tel:${phoneLink}'">
+                            <div class="phone-line" data-tel="${phoneLink}">
                                 <div class="phone-content">
                                     <span class="line-number">${lineNum}</span>
                                     <span class="phone-link">${trimmedLine}</span>
                                 </div>
                                 <div class="line-actions">
                                     ${countryBadge}
+                                    <div class="vote-buttons">
+                                        <button class="vote-btn upvote" title="Funciona">▲</button>
+                                        <button class="vote-btn downvote" title="No funciona">▼</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -212,9 +212,53 @@
 
                 listContainer.innerHTML = html;
 
+                // Add click handlers
+                addClickHandlers();
+
             } catch (e) {
                 console.error('Error decoding content:', e);
             }
+        }
+
+        function addClickHandlers() {
+            const phoneLines = document.querySelectorAll('.phone-line');
+
+            phoneLines.forEach(line => {
+                // Line click - make call
+                line.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('vote-btn')) {
+                        return; // Don't call if clicking vote buttons
+                    }
+                    const tel = this.getAttribute('data-tel');
+                    if (tel) {
+                        window.location.href = 'tel:' + tel;
+                    }
+                });
+
+                // Vote buttons
+                const upvoteBtn = line.querySelector('.vote-btn.upvote');
+                const downvoteBtn = line.querySelector('.vote-btn.downvote');
+
+                if (upvoteBtn) {
+                    upvoteBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        this.classList.toggle('active');
+                        if (this.classList.contains('active') && downvoteBtn) {
+                            downvoteBtn.classList.remove('active');
+                        }
+                    });
+                }
+
+                if (downvoteBtn) {
+                    downvoteBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        this.classList.toggle('active');
+                        if (this.classList.contains('active') && upvoteBtn) {
+                            upvoteBtn.classList.remove('active');
+                        }
+                    });
+                }
+            });
         }
 
         function toggleTheme() {
