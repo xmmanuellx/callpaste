@@ -236,13 +236,13 @@ body {
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    background: transparent;
+    border: 2px solid var(--text);
+    border-radius: 8px;
     color: var(--text);
     font-family: inherit;
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
@@ -257,24 +257,26 @@ body {
 }
 
 .btn-primary {
-    background: var(--text);
-    color: var(--bg);
+    background: transparent;
+    color: var(--text);
     border-color: var(--text);
 }
 
 .btn-primary:hover {
-    opacity: 0.9;
     background: var(--text);
+    color: var(--bg);
 }
 
 .btn-ghost {
     background: transparent;
     border-color: transparent;
+    color: var(--text-secondary);
 }
 
 .btn-ghost:hover {
     background: var(--bg-input);
     border-color: var(--border);
+    color: var(--text);
 }
 
 .btn-sm {

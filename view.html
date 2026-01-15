@@ -161,10 +161,16 @@
 
         .player-btn.primary,
         .player-btn.secondary {
-            background: #333333;
-            color: #ffffff;
-            border: 1px solid #444444;
+            background: var(--bg-card);
+            color: var(--text);
+            border: 2px solid var(--text);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-btn.primary:hover,
+        .player-btn.secondary:hover {
+            background: var(--text);
+            color: var(--bg);
         }
 
         .player-btn:active {
