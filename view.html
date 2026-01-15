@@ -120,6 +120,75 @@
         .view-list .phone-line {
             cursor: pointer;
         }
+
+        /* Player Mode Styles */
+        .player-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        body.player-mode .player-controls {
+            transform: translateY(0);
+        }
+
+        /* Add padding to bottom of list in player mode so last item isn't hidden */
+        body.player-mode .view-container {
+            padding-bottom: 120px;
+        }
+
+        .player-btn {
+            flex: 1;
+            max-width: 180px;
+            height: 56px;
+            border-radius: 28px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .player-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .player-btn.secondary {
+            background: var(--bg-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .player-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Highlight active line more in player mode */
+        body.player-mode .phone-line.touched {
+            border-left: 6px solid var(--primary) !important;
+            background-color: rgba(37, 99, 235, 0.1) !important;
+        }
     </style>
 </head>
 
@@ -156,6 +225,16 @@
         <footer class="view-footer">
             <a href="index.html">Crear tu propia lista → CallPaste</a>
         </footer>
+    </div>
+
+    <!-- Player Controls (Hidden by default, shown in Player Mode) -->
+    <div class="player-controls">
+        <button id="btn-repeat" class="player-btn secondary">
+            <span style="font-size: 1.2rem;">↺</span> Repetir
+        </button>
+        <button id="btn-next" class="player-btn primary">
+            Siguiente <span style="font-size: 1.2rem;">▶</span>
+        </button>
     </div>
 
     <!-- LZString for decompression -->
@@ -405,9 +484,9 @@
             return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         }
 
-        // View Mode Logic: Normal -> Slim -> Grid -> Normal
-        const MODES = ['normal', 'slim', 'grid'];
-        const ICONS = { 'normal': '☰', 'slim': '☲', 'grid': '⊞' };
+        // View Mode Logic: Normal -> Slim -> Grid -> Player -> Normal
+        const MODES = ['normal', 'slim', 'grid', 'player'];
+        const ICONS = { 'normal': '☰', 'slim': '☲', 'grid': '⊞', 'player': '▶' };
 
         function toggleViewMode() {
             const body = document.body;
@@ -606,7 +685,57 @@
 
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             document.getElementById('view-mode-toggle').addEventListener('click', toggleViewMode);
+
+            // Player Mode Controls
+            document.getElementById('btn-next').addEventListener('click', playNext);
+            document.getElementById('btn-repeat').addEventListener('click', playCurrent);
         });
+
+        // Player Logic
+        function playNext() {
+            const lines = Array.from(document.querySelectorAll('.phone-line'));
+            if (lines.length === 0) return;
+
+            let currentIndex = lines.findIndex(l => l.classList.contains('touched'));
+
+            // If no line is selected, select the first one. 
+            // If the last one is selected, wrap around or stop? Let's stop at the end or wrap?
+            // User said "siguiente linea", usually implies progression.
+
+            let nextIndex = currentIndex + 1;
+
+            // If we are at the end, maybe we shouldn't loop automatically, 
+            // but for a "list" calling tool, looping might be unexpected. 
+            // Let's stay at the last open or cycle?
+            // If nothing selected (-1), start at 0.
+
+            if (nextIndex >= lines.length) {
+                // End of list
+                // Optionally alert or just loop to start? Let's loop for now or reset.
+                // Or just do nothing.
+                nextIndex = 0; // Loop back to start for continuous workflow
+            }
+
+            triggerCall(lines[nextIndex]);
+        }
+
+        function playCurrent() {
+            const lines = Array.from(document.querySelectorAll('.phone-line'));
+            const currentIndex = lines.findIndex(l => l.classList.contains('touched'));
+
+            if (currentIndex !== -1) {
+                triggerCall(lines[currentIndex]);
+            } else {
+                // If nothing selected, start first
+                if (lines.length > 0) triggerCall(lines[0]);
+            }
+        }
+
+        function triggerCall(element) {
+            // Visualize click
+            element.click();
+            // The click handler already handles scrolling and calling
+        }
     </script>
 </body>
 
