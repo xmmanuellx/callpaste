@@ -16,6 +16,8 @@
             max-width: 600px;
             margin: 0 auto;
             padding: 1.5rem;
+            padding-bottom: 120px;
+            /* Always allow space for player controls */
             min-height: 100vh;
         }
 
@@ -121,7 +123,7 @@
             cursor: pointer;
         }
 
-        /* Player Mode Styles */
+        /* Player Mode Styles - Always Visible */
         .player-controls {
             position: fixed;
             bottom: 0;
@@ -133,21 +135,10 @@
             display: flex;
             justify-content: center;
             gap: 1rem;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
             z-index: 1000;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-        }
-
-        body.player-mode .player-controls {
-            transform: translateY(0);
-        }
-
-        /* Add padding to bottom of list in player mode so last item isn't hidden */
-        body.player-mode .view-container {
-            padding-bottom: 120px;
         }
 
         .player-btn {
@@ -484,9 +475,9 @@
             return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         }
 
-        // View Mode Logic: Normal -> Slim -> Grid -> Player -> Normal
-        const MODES = ['normal', 'slim', 'grid', 'player'];
-        const ICONS = { 'normal': '☰', 'slim': '☲', 'grid': '⊞', 'player': '▶' };
+        // View Mode Logic: Normal -> Slim -> Grid -> Normal
+        const MODES = ['normal', 'slim', 'grid'];
+        const ICONS = { 'normal': '☰', 'slim': '☲', 'grid': '⊞' };
 
         function toggleViewMode() {
             const body = document.body;
