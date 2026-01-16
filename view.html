@@ -700,6 +700,12 @@
 
             // Listen for hash changes to update content dynamically
             window.addEventListener('hashchange', loadContent);
+            // Handle bfcache restorations (Back-Forward Cache)
+            window.addEventListener('pageshow', (event) => {
+                // If page is restored from cache, or just shown, reload content to match URL
+                loadContent();
+            });
+            window.addEventListener('popstate', loadContent);
 
             // Player Mode Controls
             document.getElementById('btn-next').addEventListener('click', playNext);
