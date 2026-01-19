@@ -248,6 +248,30 @@
 
     <!-- LZString for decompression -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCu63MurDRSFN210covePBXymjq1zIw3to",
+            authDomain: "callpaste-app-2026.firebaseapp.com",
+            projectId: "callpaste-app-2026",
+            storageBucket: "callpaste-app-2026.firebasestorage.app",
+            messagingSenderId: "578605796686",
+            appId: "1:578605796686:web:cbe878be1547cc891be21f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // State
+        let currentListId = null;
+        let unsubscribeVotes = null;
+    </script>
     <script>
         // Country codes dictionary (sorted by length for proper matching)
         const countryCodes = {
@@ -603,8 +627,8 @@
                                 </div>
                                 <div class="line-actions">
                                     ${countryBadge}
+                                    <span class="connection-counter" title="Conexiones exitosas">0</span>
                                     <div class="vote-buttons">
-                                        <button class="vote-btn upvote" title="Funciona">▲</button>
                                         <button class="vote-btn downvote" title="No funciona">▼</button>
                                     </div>
                                 </div>
@@ -616,6 +640,12 @@
                 });
 
                 listContainer.innerHTML = html;
+
+                // Generate List ID for DB
+                generateListId(lines).then(id => {
+                    currentListId = id;
+                    subscribeToVotes(id);
+                });
 
                 // Add click handlers
                 addClickHandlers();
@@ -630,6 +660,8 @@
             const phoneLines = document.querySelectorAll('.phone-line');
 
             phoneLines.forEach(line => {
+                const tel = line.getAttribute('data-tel');
+
                 // Line click - make call
                 line.addEventListener('click', function (e) {
                     if (e.target.classList.contains('vote-btn')) {
@@ -644,8 +676,9 @@
                     // Auto-scroll focused item to center (UX Improvement)
                     this.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                    const tel = this.getAttribute('data-tel');
                     if (tel) {
+                        // Log attempt (increment click count)
+                        castVote(tel, 'attempt');
                         window.location.href = 'tel:' + tel;
                     }
                 });
@@ -655,27 +688,140 @@
                 const downvoteBtn = line.querySelector('.vote-btn.downvote');
 
                 if (upvoteBtn) {
-                    upvoteBtn.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        this.classList.toggle('active');
-                        if (this.classList.contains('active') && downvoteBtn) {
-                            downvoteBtn.classList.remove('active');
-                        }
-                    });
+                    // Upvote button removed in favor of auto-counter or manual add logic if needed
+                    // keeping variable if we want to re-add, but UI changed above.
+                    // Actually, let's keep it simply hidden or use the counter itself as the indicator.
+                    // For now, based on user request, "green" is connections.
                 }
 
                 if (downvoteBtn) {
                     downvoteBtn.addEventListener('click', function (e) {
                         e.stopPropagation();
-                        this.classList.toggle('active');
-                        if (this.classList.contains('active') && upvoteBtn) {
-                            upvoteBtn.classList.remove('active');
-                        }
+                        // Toggle ghost status
+                        const isGhost = line.classList.contains('ghost-mode');
+                        // If it WAS ghost, we remove it (neutral). If not, we make it ghost.
+                        castVote(tel, isGhost ? 'neutral' : 'down');
                     });
                 }
             });
         }
 
+        // --- Firebase Logic ---
+
+        // Hash content to get a stable List ID
+        async function generateListId(lines) {
+            // Join lines and hash
+            const content = lines.map(l => l.trim()).join('|');
+            const encoder = new TextEncoder();
+            const data = encoder.encode(content);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex.substring(0, 16); // Short hash
+        }
+
+        // Subscribe to votes
+        function subscribeToVotes(listId) {
+            if (unsubscribeVotes) unsubscribeVotes(); // Unsubscribe prev
+
+            const docRef = db.collection('lists').doc(listId);
+
+            unsubscribeVotes = docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    applyVotes(data.votes || {});
+                }
+            });
+        }
+
+        // Apply votes/counts to UI
+        function applyVotes(votesMap) {
+            const lines = document.querySelectorAll('.phone-line');
+            lines.forEach(line => {
+                const tel = line.getAttribute('data-tel');
+                if (!tel) return;
+
+                const data = votesMap[tel] || {}; // Object {status: 'down'|'neutral', count: 0}
+
+                const downBtn = line.querySelector('.vote-btn.downvote');
+                const counterBadge = line.querySelector('.connection-counter');
+
+                // Reset
+                line.classList.remove('ghost-mode');
+                downBtn.classList.remove('active');
+
+                const status = data.status || 'neutral';
+                const count = data.count || 0;
+                const attempts = data.attempts || 0;
+
+                // LOGIC MAP IMPLEMENTATION
+                // 1. Ghost Mode Logic
+                //    - Manual Downvote
+                //    - Automatic Fatigue: >10 attempts AND 0 successes
+                let isGhost = false;
+
+                if (status === 'down') {
+                    isGhost = true;
+                } else if (attempts > 10 && count === 0) {
+                    isGhost = true;
+                    // Optional: We could update DB status to 'down' here to make it permanent, 
+                    // but calculating it on client is non-destructive (allows recovery if count > 0 later).
+                    // Let's stick to visual/functional ghosting.
+                }
+
+                if (isGhost) {
+                    line.classList.add('ghost-mode');
+                    // Only activate button if manually downvoted, or maybe distinct style?
+                    // Let's activate it to show why it's ghosted.
+                    downBtn.classList.add('active');
+                }
+
+                // 2. Connection Counter Logic
+                if (count > 0) {
+                    counterBadge.textContent = `${count}`;
+                    counterBadge.classList.add('visible');
+                    // Green highlight for successful lines
+                    // (Override ghost if it somehow has count > 0, though logic prevents auto-ghost in that case)
+                    if (!isGhost) {
+                        line.style.borderLeft = '3px solid #22c55e';
+                    }
+                } else {
+                    counterBadge.classList.remove('visible');
+                    if (!isGhost) line.style.borderLeft = '';
+                }
+            });
+        }
+
+        // Write vote/count to DB
+        // action: 'increment' (success), 'attempt' (try), 'down' (block), 'neutral' (reset)
+        function castVote(phone, action) {
+            if (!currentListId) return;
+
+            const docRef = db.collection('lists').doc(currentListId);
+
+            const updateData = {};
+
+            if (action === 'increment') {
+                // SUCCESS: +1 count
+                updateData[`votes.${phone}.count`] = firebase.firestore.FieldValue.increment(1);
+                updateData[`votes.${phone}.status`] = 'neutral';
+            }
+            else if (action === 'attempt') {
+                // ATTEMPT: +1 attempts
+                updateData[`votes.${phone}.attempts`] = firebase.firestore.FieldValue.increment(1);
+            }
+            else if (action === 'down') {
+                updateData[`votes.${phone}.status`] = 'down';
+            }
+            else if (action === 'neutral') {
+                updateData[`votes.${phone}.status`] = 'neutral';
+            }
+
+            docRef.set(updateData, { merge: true })
+                .catch(err => console.error("Error voting:", err));
+        }
+
+        // --- Theme & View Logic ---
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
@@ -719,25 +865,25 @@
 
             let currentIndex = lines.findIndex(l => l.classList.contains('touched'));
 
-            // If no line is selected, select the first one. 
-            // If the last one is selected, wrap around or stop? Let's stop at the end or wrap?
-            // User said "siguiente linea", usually implies progression.
+            // Smart Skip Logic: Find next NON-GHOST line
+            let nextIndex = currentIndex;
+            let found = false;
+            let attempts = 0;
 
-            let nextIndex = currentIndex + 1;
+            while (!found && attempts < lines.length) {
+                nextIndex++;
+                if (nextIndex >= lines.length) nextIndex = 0; // Loop
 
-            // If we are at the end, maybe we shouldn't loop automatically, 
-            // but for a "list" calling tool, looping might be unexpected. 
-            // Let's stay at the last open or cycle?
-            // If nothing selected (-1), start at 0.
-
-            if (nextIndex >= lines.length) {
-                // End of list
-                // Optionally alert or just loop to start? Let's loop for now or reset.
-                // Or just do nothing.
-                nextIndex = 0; // Loop back to start for continuous workflow
+                // Check if valid target (not ghost)
+                if (!lines[nextIndex].classList.contains('ghost-mode')) {
+                    found = true;
+                }
+                attempts++;
             }
 
-            triggerCall(lines[nextIndex]);
+            if (found) {
+                triggerCall(lines[nextIndex]);
+            }
         }
 
         function playCurrent() {
@@ -745,9 +891,15 @@
             const currentIndex = lines.findIndex(l => l.classList.contains('touched'));
 
             if (currentIndex !== -1) {
-                triggerCall(lines[currentIndex]);
+                // **AUTO-VOTE: Increment Connection Count**
+                const line = lines[currentIndex];
+                const tel = line.getAttribute('data-tel');
+                if (tel) {
+                    castVote(tel, 'increment');
+                }
+
+                triggerCall(line);
             } else {
-                // If nothing selected, start first
                 if (lines.length > 0) triggerCall(lines[0]);
             }
         }
