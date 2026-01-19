@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=GHOST_MODE_LIVE">
+    <link rel="stylesheet" href="styles.css?v=GLOBAL_FIX_2026">
     <style>
         /* View-specific styles */
         .view-container {
@@ -266,11 +266,11 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        var db = firebase.firestore();
 
         // State
-        let currentListId = null;
-        let unsubscribeVotes = null;
+        var currentListId = null;
+        var unsubscribeVotes = null;
     </script>
     <script>
         // Country codes dictionary (sorted by length for proper matching)
@@ -731,6 +731,8 @@
                     const data = doc.data();
                     applyVotes(data.votes || {});
                 }
+            }, (error) => {
+                console.error("Error suscribiendo:", error);
             });
         }
 
@@ -826,6 +828,22 @@
 
             docRef.set(updateData, { merge: true })
                 .catch(err => console.error("Error voting:", err));
+        }
+
+        function showToast(message, duration = 3000) {
+            // Remove existing toasts to prevent stacking
+            const existing = document.querySelectorAll('.toast');
+            existing.forEach(t => t.remove());
+
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
         }
 
         // --- Theme & View Logic ---
