@@ -644,7 +644,6 @@
                 // Generate List ID for DB
                 generateListId(lines).then(id => {
                     currentListId = id;
-                    console.log('[CallPaste] List ID:', id);
                     subscribeToVotes(id);
                 });
 
@@ -723,23 +722,14 @@
 
         // Subscribe to votes
         function subscribeToVotes(listId) {
-            console.log('[CallPaste] subscribeToVotes called, db=', typeof db, 'listId=', listId);
             if (unsubscribeVotes) unsubscribeVotes(); // Unsubscribe prev
-
-            if (typeof db === 'undefined') {
-                console.error('[CallPaste] ERROR: db is undefined!');
-                return;
-            }
+            if (typeof db === 'undefined') return;
 
             const docRef = db.collection('lists').doc(listId);
 
             unsubscribeVotes = docRef.onSnapshot((doc) => {
-                console.log('[CallPaste] Snapshot received:', doc.exists ? 'exists' : 'empty');
                 if (doc.exists) {
                     const data = doc.data();
-                    console.log('[CallPaste] Document keys:', Object.keys(data));
-                    console.log('[CallPaste] votes type:', typeof data.votes);
-                    console.log('[CallPaste] votes value:', data.votes);
                     applyVotes(data.votes || {});
                 }
             }, (error) => {
