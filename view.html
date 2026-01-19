@@ -817,6 +817,13 @@
                 updateData[`votes.${phone}.status`] = 'neutral';
             }
 
+            // Add TTL expiration (24 hours from now)
+            // Note: We only need to set this ONCE or refresh it on every activity.
+            // Refreshing it on every activity keeps active lists alive.
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            updateData.expiresAt = firebase.firestore.Timestamp.fromDate(tomorrow);
+
             docRef.set(updateData, { merge: true })
                 .catch(err => console.error("Error voting:", err));
         }
