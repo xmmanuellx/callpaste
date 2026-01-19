@@ -737,8 +737,9 @@
                 console.log('[CallPaste] Snapshot received:', doc.exists ? 'exists' : 'empty');
                 if (doc.exists) {
                     const data = doc.data();
-                    console.log('[CallPaste] Full document:', JSON.stringify(data));
-                    console.log('[CallPaste] Votes data:', data.votes);
+                    console.log('[CallPaste] Document keys:', Object.keys(data));
+                    console.log('[CallPaste] votes type:', typeof data.votes);
+                    console.log('[CallPaste] votes value:', data.votes);
                     applyVotes(data.votes || {});
                 }
             }, (error) => {
